@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[3]:
 
 
 import os
@@ -9,7 +9,7 @@ from pathlib import Path
 import pandas as pd
 
 
-# In[2]:
+# In[4]:
 
 
 def get_png_images_with_structure(root_folder):
@@ -43,7 +43,7 @@ def get_png_images_with_structure(root_folder):
     max_cols = max(len(row) for row in data)
 
     # Create column names dynamically
-    columns = ['Root'] + [f'Subfolder_{i+1}' for i in range(max_cols - 2)] + ['Image Name']
+    columns = ['Root'] + [f'Subfolder_{i+1}' for i in range(max_cols-2)] + ['Image Name']
 
     # Create DataFrame
     df = pd.DataFrame(data, columns=columns)
@@ -56,12 +56,13 @@ def get_png_images_with_structure(root_folder):
 
 
 # export df as excel data
-folder_path=r"C:\Users\JDBUSTAMANTE\OneDrive - Duratex SA\reports_visualizacion_data_produccion\data_plots\imgs_reports_daily"
+folder_path=r"C:\Users\JDBUSTAMANTE\OneDrive - Duratex SA\reports_visualizacion_data_produccion\source_return_data\data_plots\imgs_reports_daily"
 df_images = get_png_images_with_structure(folder_path)
-df_images.to_excel(r"C:\Users\JDBUSTAMANTE\OneDrive - Duratex SA\reports_visualizacion_data_produccion\path_structure_of_plots.xlsx")
+df_images.to_excel(r"C:\Users\JDBUSTAMANTE\OneDrive - Duratex SA\reports_visualizacion_data_produccion\source_return_data\path_structure_of_plots.xlsx")
 
 
 # In[6]:
 
 
-"""get_ipython().system('jupyter nbconvert --to script plot_paths_to_pwbi_report.ipynb')"""
+get_ipython().system('jupyter nbconvert --to script plot_paths_to_pwbi_report.ipynb')
+
