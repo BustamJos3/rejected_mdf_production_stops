@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[3]:
+# In[5]:
 
 
 import os
@@ -9,7 +9,7 @@ from pathlib import Path
 import pandas as pd
 
 
-# In[4]:
+# In[6]:
 
 
 def get_png_images_with_structure(root_folder):
@@ -52,16 +52,71 @@ def get_png_images_with_structure(root_folder):
     return df
 
 
-# In[5]:
+# In[7]:
+
+
+import os
+
+def find_reports_in_onedrive():
+    """
+    Scans the subfolders under the current user's OneDrive folder (including variations like 'OneDrive - Company Name')
+    and returns the paths of all folders with the prefix 'reports'.
+
+    Returns:
+        list: A list of full paths to folders starting with 'reports', or an empty list if none are found.
+    """
+    # Get the base path to the user's home directory
+    user_home = os.path.expanduser("~")
+
+    # Find the OneDrive folder (handles variations like "OneDrive - Company Name")
+    onedrive_folder = None
+    for folder in os.listdir(user_home):
+        if folder.startswith("OneDrive -"):
+            onedrive_folder = os.path.join(user_home, folder)
+            break
+
+    if not onedrive_folder:
+        raise FileNotFoundError("OneDrive folder not found for the current user.")
+
+    # Search for folders with the prefix 'reports' in the OneDrive directory
+    report_folders = []
+    for root, dirs, files in os.walk(onedrive_folder):
+        for dir_name in dirs:
+            if dir_name.lower().startswith("reports"):
+                report_folders.append(os.path.join(root, dir_name))
+
+    return report_folders
+
+
+# In[2]:
+
+
+reports_paths=find_reports_in_onedrive()
+reports_paths
+
+
+# In[8]:
+
+
+str_folder_searcher="reports_visualizacion_data_produccion"
+for report_path in reports_paths:
+    if str_folder_searcher in report_path:
+        path=Path(reports_paths[reports_paths.index(report_path)])
+path=Path.joinpath(path,r"source_and_return_data")
+path
+
+
+# In[10]:
 
 
 # export df as excel data
-folder_path=r"C:\Users\JDBUSTAMANTE\OneDrive - Duratex SA\reports_visualizacion_data_produccion\source_return_data\data_plots\imgs_reports_daily"
+folder_path=Path.joinpath(path,r"data_plots\imgs_reports_daily")
 df_images = get_png_images_with_structure(folder_path)
-df_images.to_excel(r"C:\Users\JDBUSTAMANTE\OneDrive - Duratex SA\reports_visualizacion_data_produccion\source_return_data\path_structure_of_plots.xlsx")
+path_export=Path.joinpath(path,"path_structure_of_plots.xlsx")
+df_images.to_excel(path_export)
 
 
-# In[6]:
+# In[ ]:
 
 
 get_ipython().system('jupyter nbconvert --to script plot_paths_to_pwbi_report.ipynb')
