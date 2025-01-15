@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[204]:
+# In[19]:
 
 
 import pandas as pd #modules
@@ -15,16 +15,70 @@ from pathlib import Path
 from datetime import datetime
 
 
-# In[205]:
+# In[20]:
 
 
-directory = Path(r".\data_plots") #get current work directory
+import os
+
+def find_reports_in_onedrive():
+    """
+    Scans the subfolders under the current user's OneDrive folder (including variations like 'OneDrive - Company Name')
+    and returns the paths of all folders with the prefix 'reports'.
+
+    Returns:
+        list: A list of full paths to folders starting with 'reports', or an empty list if none are found.
+    """
+    # Get the base path to the user's home directory
+    user_home = os.path.expanduser("~")
+
+    # Find the OneDrive folder (handles variations like "OneDrive - Company Name")
+    onedrive_folder = None
+    for folder in os.listdir(user_home):
+        if folder.startswith("OneDrive -"):
+            onedrive_folder = os.path.join(user_home, folder)
+            break
+
+    if not onedrive_folder:
+        raise FileNotFoundError("OneDrive folder not found for the current user.")
+
+    # Search for folders with the prefix 'reports' in the OneDrive directory
+    report_folders = []
+    for root, dirs, files in os.walk(onedrive_folder):
+        for dir_name in dirs:
+            if dir_name.lower().startswith("reports"):
+                report_folders.append(os.path.join(root, dir_name))
+
+    return report_folders
+
+
+# In[21]:
+
+
+reports_paths=find_reports_in_onedrive()
+reports_paths
+
+
+# In[22]:
+
+
+str_folder_searcher="reports_visualizacion_data_produccion"
+for report_path in reports_paths:
+    if str_folder_searcher in report_path:
+        path=Path(reports_paths[reports_paths.index(report_path)])
+path=Path.joinpath(path,r"source_and_return_data")
+path
+
+
+# In[23]:
+
+
+directory = Path.joinpath(path,"data_plots") #get current work directory
 directory.mkdir(exist_ok=True)
 matching_files = list(directory.glob("*obj*.xlsx"))  # Busca archivos que contengan 'obj' y tengan extensión .xlsx
 print("Archivos encontrados:", matching_files)
 
 
-# In[206]:
+# In[24]:
 
 
 dict_data_pointer={} #dict to store files as dfs
@@ -43,44 +97,27 @@ for i in matching_files: # Read the Excel file
 print(list(dict_data_pointer.keys())) #see keys on dictionary to check callability
 
 
-# In[207]:
+# In[25]:
 
 
 data_pointer_ar="aperturas_nariz" #select df of aperturas de nariz
 df_ar=dict_data_pointer[data_pointer_ar] #mask df of aperturas de nariz with alias df_ar
 dates_col_name_ar="Fecha Paro" #name of col with dates in df
-df_ar[dates_col_name_ar] = df_ar[dates_col_name_ar].astype('str') #convert datetime to str
-df_ar[dates_col_name_ar][0]
+df_ar[dates_col_name_ar] =df_ar.loc[:,dates_col_name_ar].apply(lambda x:x.strftime("%Y-%m-%d")) #convert dates to desired format
+df_ar.loc[:,dates_col_name_ar]
 
 
-# In[208]:
+# In[26]:
 
 
-df_ar.head()
-
-
-# In[209]:
-
-
-time_stamp_dates=list([ i for i in [ df_ar.loc[ :, dates_col_name_ar].unique() ][::-1] ][0]) #get dates as str unique of current df
-time_stamp_dates
-
-
-# In[210]:
-
-
-#generate dates list to match aperturas with rejected panels per cause per date
-#dates_ar = [str(j).split(" ")[0].replace("/","-") if "/" in str(j).split(" ")[0] else str(j).split(" ")[0] for j in time_stamp_dates]  # dates for convert each time stamp to str and remove hh:mm:ss
-#dates_ar = [ i.split("-")[::-1][0]+"-"+i.split("-")[::-1][1]+"-"+i.split("-")[::-1][2] if "2024" not in i[0:4] else i for i in dates_ar ] #truncate day and month to match date format of rejected per cause per day
-#dates_ar =sorted(dates_ar) #sorted dates aperturas ascending
-dates_ar =sorted(time_stamp_dates) #sorted dates aperturas ascending
+dates_ar=sorted(list(set([ date_str for date_str in df_ar.loc[ :, dates_col_name_ar] ]))) #get dates as str unique of current df
 dates_ar
 
 
 # # Check matches on initial hour & final hour
 # * remove apertures that are duplicate for changes on dat shift
 
-# In[212]:
+# In[27]:
 
 
 list_dropped_idx_rows=[]
@@ -101,7 +138,7 @@ df_ar.drop(list_dropped_idx_rows,inplace=True) #drop selected rows for current d
 df_ar
 
 
-# In[213]:
+# In[28]:
 
 
 amt_apertura_nariz=df_ar.groupby(dates_col_name_ar).count().T.iloc[0] #for each production stop there is an apertura de nariz and take those values
@@ -109,7 +146,7 @@ amt_apertura_nariz=np.array(amt_apertura_nariz) #agsin amt of aperturas per day 
 amt_apertura_nariz
 
 
-# In[214]:
+# In[29]:
 
 
 data_pointer="causa_rechazos" #start with df with rejected panels number per day and cause
@@ -125,25 +162,25 @@ df.loc[:,[cause_col_name]]
 # * Drop date col on causa rechazos and replace w/ str date col
 # * Convert str to datetime to make call correctly
 
-# In[216]:
+# In[30]:
 
 
-df.loc[:,dates_col_name]=df.loc[:,dates_col_name].astype('str').apply(lambda x: x.split(" ")[0]) #remove hh:mm:ss from date
 try: #attemp to drop cummulative total row
     df=df.loc[1:,:] #drop first row cause is a total row
 except:
     pass
 df.reindex(range(len(df)))
-df[dates_col_name]
+df[dates_col_name]=df.loc[:,dates_col_name].apply(lambda x:x.strftime("%Y-%m-%d")) #convert dates to desired format
+df.loc[:,dates_col_name]
 
 
-# In[217]:
+# In[31]:
 
 
 ignored_articles=["de","s","-"] #+#articles to remove for cause name-->make basic cause labelling
 
 
-# In[218]:
+# In[32]:
 
 
 def remove_specific_chars(string=None):
@@ -161,7 +198,7 @@ def remove_specific_chars(string=None):
     return new_cause_basic_name
 
 
-# In[219]:
+# In[33]:
 
 
 causes=[str(i).lower() for i in df[cause_col_name].unique()] #day causes on lower case
@@ -177,7 +214,7 @@ dates,causes
 
 # ### Unique ID color for every cause
 
-# In[221]:
+# In[34]:
 
 
 colors_id_path=Path.joinpath(directory,"valid_causes_rejected_panels.txt")
@@ -189,7 +226,7 @@ causes_colors_df
 # # In case rejected causes is empty:
 # * generate dummy causes, all current valid causes from df of valid causes
 
-# In[223]:
+# In[35]:
 
 
 if len(causes)<1: #causes list is empty
@@ -200,7 +237,7 @@ causes
 # ## Dates check
 # * for now, aperturas de nariz file contains dates that are missing on causa rechazos file
 
-# In[225]:
+# In[36]:
 
 
 while dates_ar!=dates and eval(input()): # [:len(dates)]
@@ -217,7 +254,7 @@ dates==dates_ar
 
 # # Generate data to plotting
 
-# In[227]:
+# In[37]:
 
 
 weight_counts={i:[0]*len(causes) for i in dates} #make dict to store panel per cause per day
@@ -227,7 +264,7 @@ weight_counts
 # # TODO
 # * apply directive to clean classifications and search correctly on causa rechazos
 
-# In[229]:
+# In[38]:
 
 
 name_of_rejected_panels_col="Salidas (inv.)" #actual name of rejected panels col-->start completion of panel per cause per day
@@ -252,7 +289,7 @@ for date in dates: #run through dates
 weight_counts
 
 
-# In[230]:
+# In[39]:
 
 
 construc_data_to_stacked=list(weight_counts.items()) #get keys and values of weight_counts
@@ -263,7 +300,7 @@ weight_count_causes={i:array_rejected_panels_per_cause_per_day[j,:] for i,j in z
 weight_count_causes
 
 
-# In[231]:
+# In[40]:
 
 
 bar_cause_labels=[[]]*len(causes) #make labels to display on rectangle bar data: inside rectangle to do not display 0 values
@@ -276,14 +313,14 @@ bar_cause_labels
 # # TODO
 # * organizar orden de stacked bar para mostrar primero las causas con más paneles rechazados
 
-# In[233]:
+# In[41]:
 
 
 colors_available=mcolors.TABLEAU_COLORS
 colors_available
 
 
-# In[234]:
+# In[42]:
 
 
 colors_available_keys=list(colors_available)
@@ -291,7 +328,7 @@ colors_available_keys=list(colors_available)
 colors_available_keys
 
 
-# In[235]:
+# In[43]:
 
 
 causes_color_idxs=[]
@@ -302,21 +339,21 @@ for j in range(len(causes)):
 causes_color_idxs
 
 
-# In[236]:
+# In[44]:
 
 
 colors_choosen={cause:colors_available_keys[idx_color] for cause,idx_color in zip(causes,causes_color_idxs)}
 colors_choosen
 
 
-# In[237]:
+# In[45]:
 
 
 fontsz=12 #define font size of plot components
 matplotlib.rcParams.update({'font.size': fontsz}) #update font size for plot components of matplotlib
 
 
-# In[238]:
+# In[46]:
 
 
 fig, ax = plt.subplots()
@@ -388,13 +425,13 @@ plt.savefig(str(directory_to_save)+img_name+dates[0]+"_"+dates_ar[-1]+"_"+str_to
 plt.show()
 
 
-# In[239]:
+# In[47]:
 
 
 df_to_export=pd.concat([df, df_ar], axis=1) #merge dfs to store data as old queries
 
 
-# In[240]:
+# In[48]:
 
 
 df_to_export.to_excel(str(directory)+f"/old_queries/{data_pointer}_{data_pointer_ar}_"+dates[0]+"_"+dates_ar[-1]+".xlsx") #save current query to old_queries
@@ -403,7 +440,7 @@ df_to_export.to_excel(str(directory)+f"/old_queries/{data_pointer}_{data_pointer
 # # Plot with sorted stacked bars
 # * make innner outter index data frame, sort by inner index (causes)
 
-# In[242]:
+# In[49]:
 
 
 """times=[]
@@ -414,33 +451,33 @@ times_causes_array=[times,causes*len(dates)]
 times_causes_array"""
 
 
-# In[243]:
+# In[50]:
 
 
 """data=np.array(list(weight_count_causes.values())).T.flatten()
 data.shape"""
 
 
-# In[244]:
+# In[51]:
 
 
 """s=pd.Series(data, index=times_causes_array)"""
 
 
-# In[245]:
+# In[52]:
 
 
 """s1=s.groupby(level=[0]).apply(lambda x:x.groupby(level=[1]).sum().sort_values(ascending=True))
 s1"""
 
 
-# In[246]:
+# In[53]:
 
 
 """s1.unstack().plot.bar(stacked=True)"""
 
 
-# In[247]:
+# In[54]:
 
 
 """data,idxs=weight_count_causes.values(),weight_count_causes.keys()
@@ -451,7 +488,7 @@ data.plot.bar()"""
 
 # # Export notebook to make .py script
 
-# In[288]:
+# In[ ]:
 
 
 get_ipython().system('jupyter nbconvert --to script bar_plot_rejected_per_cause_per_day_aperturas_nariz_per_day.ipynb')

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[ ]:
+# In[49]:
 
 
 import pandas as pd #modules
@@ -15,16 +15,16 @@ from pathlib import Path
 from datetime import datetime
 
 
-# In[ ]:
+# In[50]:
 
 
-directory = Path('./data_plots') #get current work directory
+directory = Path(r"C:\Users\JDBUSTAMANTE\OneDrive - Duratex SA\reports_visualizacion_data_produccion\source_return_data\data_plots") #get current work directory
 directory.mkdir(exist_ok=True)
 matching_files = list(directory.glob("*obj*.xlsx"))  # Busca archivos que contengan 'obj' y tengan extensión .xlsx
 print("Archivos encontrados:", matching_files)
 
 
-# In[ ]:
+# In[51]:
 
 
 dict_data_pointer={} #dict to store files as dfs
@@ -43,32 +43,38 @@ for i in matching_files: # Read the Excel file
 print(list(dict_data_pointer.keys())) #see keys on dictionary to check callability
 
 
-# In[ ]:
+# In[52]:
 
 
 df_root=dict_data_pointer['aperturas_nariz']
 df_root[df_root["Fecha Paro"]=="NaT"]
 
 
-# In[ ]:
+# In[53]:
 
 
-df_pro=df_root[df_root["Modo de Fallo"].str.contains("PRO")]
-df_pro.set_index([pd.Index(range(len(df_pro)))],inplace=True)
-df_pro["Fecha Paro"]=df_pro["Fecha Paro"].astype("str") #
+df_root
+
+
+# In[57]:
+
+
+df_pro=df_root[df_root["Tipo Paro"].str.contains("PRO")]
+#df_pro.set_index([pd.Index(range(len(df_pro)))],inplace=True)
+df_pro["Fecha Paro"]=df_pro.loc[:,"Fecha Paro"].apply(lambda x: x.strftime("%Y-%m-%d")) #
 df_pro['Fecha Paro'][0]
 
 
 # # Drop duplicate apertures
 
-# In[ ]:
+# In[59]:
 
 
 dates_ar=[date for date in df_pro["Fecha Paro"].unique()]
 dates_ar
 
 
-# In[ ]:
+# In[60]:
 
 
 list_dropped_idx_rows=[]
@@ -78,60 +84,60 @@ for date_ar in dates_ar:
     rows_df_seeker=df_seeker.index #get idx of df for current date
     last_row=rows_df_seeker[-1] #to avoid out of range
     print(last_row)
-    for row in rows_df_seeker:
-        print(row)
+    for idx,row in enumerate(rows_df_seeker):
+        print(f"{row} from {len(rows_df_seeker)}")
         if row==last_row:
             continue #jump to next date
-        if df_seeker.at[row,"Hora Final"]==df_seeker.at[row+1,"Hora Inicial"]:
+        if df_seeker.at[row,"Hora Final"]==df_seeker.at[rows_df_seeker[idx+1],"Hora Inicial"]:
             list_dropped_idx_rows.append(row+1) #add idx to be dropped
     print("idxs to drop are {}".format(list_dropped_idx_rows))
 df_pro.drop(list_dropped_idx_rows,inplace=True) #drop selected rows for current date
 df_pro
 
 
-# In[ ]:
+# In[61]:
 
 
 df_count_fail_mode_equipment=df_pro.groupby(by=["Fecha Paro","Modo de Fallo","Descripción Equipo"]).count().loc[:,"Linea"]
 df_count_fail_mode_equipment
 
 
-# In[ ]:
+# In[62]:
 
 
 multi_index_from_df=list(df_count_fail_mode_equipment.index)
 multi_index_from_df
 
 
-# In[ ]:
+# In[63]:
 
 
 dates=sorted(list(set([multi_index[0] for multi_index in multi_index_from_df ])))
 dates
 
 
-# In[ ]:
+# In[64]:
 
 
 fail_modes=sorted(list(set([multi_index[1] for multi_index in multi_index_from_df ])))
 fail_modes
 
 
-# In[ ]:
+# In[65]:
 
 
 equipments=sorted(list(set([multi_index[2] for multi_index in multi_index_from_df ])))
 equipments
 
 
-# In[ ]:
+# In[66]:
 
 
 df_stacked_data=pd.DataFrame(data=[],index=dates,columns=fail_modes).fillna(0)
 df_stacked_data
 
 
-# In[ ]:
+# In[67]:
 
 
 dict_stacked_values={fail_mode:[""]*len(dates) for fail_mode in fail_modes}
@@ -146,13 +152,13 @@ for date,fail_mode,equip in multi_index_from_df:
     dict_stacked_values[fail_mode][idx_date]=value_label_plus_equip
 
 
-# In[ ]:
+# In[68]:
 
 
 df_stacked_data
 
 
-# In[ ]:
+# In[69]:
 
 
 list_count_by_fail_mode_per_date=list(df_stacked_data.T.values)
@@ -160,7 +166,7 @@ weight_counts={" ".join(fail_mode.split("-")[0].split()).lower():list_count_by_f
 weight_counts
 
 
-# In[ ]:
+# In[70]:
 
 
 for new_key,old_key in zip(weight_counts.keys(),fail_modes):
@@ -170,14 +176,14 @@ dict_stacked_values
 
 # # Plot
 
-# In[ ]:
+# In[71]:
 
 
 colors_available=mcolors.TABLEAU_COLORS
 colors_available
 
 
-# In[ ]:
+# In[72]:
 
 
 """
@@ -186,7 +192,7 @@ colors_choosen
 """
 
 
-# In[ ]:
+# In[74]:
 
 
 fig, ax = plt.subplots()
