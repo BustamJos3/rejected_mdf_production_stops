@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[19]:
+# In[1]:
 
 
 import pandas as pd #modules
@@ -15,7 +15,7 @@ from pathlib import Path
 from datetime import datetime
 
 
-# In[20]:
+# In[2]:
 
 
 import os
@@ -51,14 +51,14 @@ def find_reports_in_onedrive():
     return report_folders
 
 
-# In[21]:
+# In[3]:
 
 
 reports_paths=find_reports_in_onedrive()
 reports_paths
 
 
-# In[22]:
+# In[4]:
 
 
 str_folder_searcher="reports_visualizacion_data_produccion"
@@ -69,7 +69,7 @@ path=Path.joinpath(path,r"source_and_return_data")
 path
 
 
-# In[23]:
+# In[5]:
 
 
 directory = Path.joinpath(path,"data_plots") #get current work directory
@@ -78,7 +78,7 @@ matching_files = list(directory.glob("*obj*.xlsx"))  # Busca archivos que conten
 print("Archivos encontrados:", matching_files)
 
 
-# In[24]:
+# In[6]:
 
 
 dict_data_pointer={} #dict to store files as dfs
@@ -97,7 +97,7 @@ for i in matching_files: # Read the Excel file
 print(list(dict_data_pointer.keys())) #see keys on dictionary to check callability
 
 
-# In[25]:
+# In[7]:
 
 
 data_pointer_ar="aperturas_nariz" #select df of aperturas de nariz
@@ -107,7 +107,7 @@ df_ar[dates_col_name_ar] =df_ar.loc[:,dates_col_name_ar].apply(lambda x:x.strfti
 df_ar.loc[:,dates_col_name_ar]
 
 
-# In[26]:
+# In[8]:
 
 
 dates_ar=sorted(list(set([ date_str for date_str in df_ar.loc[ :, dates_col_name_ar] ]))) #get dates as str unique of current df
@@ -117,7 +117,7 @@ dates_ar
 # # Check matches on initial hour & final hour
 # * remove apertures that are duplicate for changes on dat shift
 
-# In[27]:
+# In[9]:
 
 
 list_dropped_idx_rows=[]
@@ -138,7 +138,7 @@ df_ar.drop(list_dropped_idx_rows,inplace=True) #drop selected rows for current d
 df_ar
 
 
-# In[28]:
+# In[10]:
 
 
 amt_apertura_nariz=df_ar.groupby(dates_col_name_ar).count().T.iloc[0] #for each production stop there is an apertura de nariz and take those values
@@ -146,7 +146,7 @@ amt_apertura_nariz=np.array(amt_apertura_nariz) #agsin amt of aperturas per day 
 amt_apertura_nariz
 
 
-# In[29]:
+# In[11]:
 
 
 data_pointer="causa_rechazos" #start with df with rejected panels number per day and cause
@@ -162,7 +162,7 @@ df.loc[:,[cause_col_name]]
 # * Drop date col on causa rechazos and replace w/ str date col
 # * Convert str to datetime to make call correctly
 
-# In[30]:
+# In[12]:
 
 
 try: #attemp to drop cummulative total row
@@ -174,13 +174,13 @@ df[dates_col_name]=df.loc[:,dates_col_name].apply(lambda x:x.strftime("%Y-%m-%d"
 df.loc[:,dates_col_name]
 
 
-# In[31]:
+# In[13]:
 
 
 ignored_articles=["de","s","-"] #+#articles to remove for cause name-->make basic cause labelling
 
 
-# In[32]:
+# In[14]:
 
 
 def remove_specific_chars(string=None):
@@ -198,7 +198,7 @@ def remove_specific_chars(string=None):
     return new_cause_basic_name
 
 
-# In[33]:
+# In[15]:
 
 
 causes=[str(i).lower() for i in df[cause_col_name].unique()] #day causes on lower case
@@ -214,7 +214,7 @@ dates,causes
 
 # ### Unique ID color for every cause
 
-# In[34]:
+# In[16]:
 
 
 colors_id_path=Path.joinpath(directory,"valid_causes_rejected_panels.txt")
@@ -226,7 +226,7 @@ causes_colors_df
 # # In case rejected causes is empty:
 # * generate dummy causes, all current valid causes from df of valid causes
 
-# In[35]:
+# In[17]:
 
 
 if len(causes)<1: #causes list is empty
@@ -237,7 +237,7 @@ causes
 # ## Dates check
 # * for now, aperturas de nariz file contains dates that are missing on causa rechazos file
 
-# In[36]:
+# In[18]:
 
 
 while dates_ar!=dates and eval(input()): # [:len(dates)]
@@ -254,7 +254,7 @@ dates==dates_ar
 
 # # Generate data to plotting
 
-# In[37]:
+# In[19]:
 
 
 weight_counts={i:[0]*len(causes) for i in dates} #make dict to store panel per cause per day
@@ -264,7 +264,7 @@ weight_counts
 # # TODO
 # * apply directive to clean classifications and search correctly on causa rechazos
 
-# In[38]:
+# In[20]:
 
 
 name_of_rejected_panels_col="Salidas (inv.)" #actual name of rejected panels col-->start completion of panel per cause per day
@@ -289,7 +289,7 @@ for date in dates: #run through dates
 weight_counts
 
 
-# In[39]:
+# In[21]:
 
 
 construc_data_to_stacked=list(weight_counts.items()) #get keys and values of weight_counts
@@ -300,7 +300,7 @@ weight_count_causes={i:array_rejected_panels_per_cause_per_day[j,:] for i,j in z
 weight_count_causes
 
 
-# In[40]:
+# In[22]:
 
 
 bar_cause_labels=[[]]*len(causes) #make labels to display on rectangle bar data: inside rectangle to do not display 0 values
@@ -313,14 +313,14 @@ bar_cause_labels
 # # TODO
 # * organizar orden de stacked bar para mostrar primero las causas con más paneles rechazados
 
-# In[41]:
+# In[23]:
 
 
 colors_available=mcolors.TABLEAU_COLORS
 colors_available
 
 
-# In[42]:
+# In[24]:
 
 
 colors_available_keys=list(colors_available)
@@ -328,7 +328,7 @@ colors_available_keys=list(colors_available)
 colors_available_keys
 
 
-# In[43]:
+# In[25]:
 
 
 causes_color_idxs=[]
@@ -339,21 +339,21 @@ for j in range(len(causes)):
 causes_color_idxs
 
 
-# In[44]:
+# In[26]:
 
 
 colors_choosen={cause:colors_available_keys[idx_color] for cause,idx_color in zip(causes,causes_color_idxs)}
 colors_choosen
 
 
-# In[45]:
+# In[27]:
 
 
 fontsz=12 #define font size of plot components
 matplotlib.rcParams.update({'font.size': fontsz}) #update font size for plot components of matplotlib
 
 
-# In[46]:
+# In[38]:
 
 
 fig, ax = plt.subplots()
@@ -385,8 +385,9 @@ ax.set_xticks(amt_xticks)
 ax.set_xticklabels(dates,rotation=90) #rotate x axis labels 90º to be displayed vertically
 ax.set_xlabel(dates_col_name) #name of bar plot x axis
 rejected_panels_values=np.array(list(weight_counts.values()))
-max_y_axis=np.max(rejected_panels_values) #get max of all data
-ax.set_yticks(np.arange(0, max_y_axis+max_bottom, 2)) #set y axis label values: axis pitch=10 unds
+max_rejected_axis=np.max(rejected_panels_values) #get max of all data
+max_rejected_axis_step=3
+ax.set_yticks(np.arange(0, max_rejected_axis+max_bottom, max_rejected_axis_step)) #set y axis label values: axis pitch=10 unds
 ax.set_ylabel("Cantidad de rechazos [-]") #y axis name for bar plot
 ax.set_aspect('auto')
 #plot aperturas
@@ -409,8 +410,9 @@ bb_ar.x1 += xOffset*(1.05)
 leq_ar.set_bbox_to_anchor(bb_ar, transform = ax.transAxes)
 secax_y2 = ax_ar.secondary_yaxis("right", functions=(lambda x: x, lambda x: x)) #make new y axis for aperturas
 secax_y2.set_ylabel("Aperturas de nairz [-]",color='b') #change color of y axis to blue
-max_aperturas=np.max(amt_apertura_nariz) #to set max lim of aperturas y axis
-secax_y2.set_yticks(np.arange(0, max_aperturas*(1.4), 2)) #change y axis limits and pitch to 5
+max_apertures_axis=np.max(amt_apertura_nariz) #to set max lim of aperturas y axis
+max_apertures_axis_step=3
+secax_y2.set_yticks(np.arange(0, max_apertures_axis*(1.4), max_apertures_axis_step)) #change y axis limits and pitch to 5
 ax_ar.set_aspect('auto')
 imgs_folder="/imgs_reports_daily" #str with name to save plots
 imgs_type_folder="/qty_rejecteds_apertures"
@@ -425,13 +427,13 @@ plt.savefig(str(directory_to_save)+img_name+dates[0]+"_"+dates_ar[-1]+"_"+str_to
 plt.show()
 
 
-# In[47]:
+# In[29]:
 
 
 df_to_export=pd.concat([df, df_ar], axis=1) #merge dfs to store data as old queries
 
 
-# In[48]:
+# In[30]:
 
 
 df_to_export.to_excel(str(directory)+f"/old_queries/{data_pointer}_{data_pointer_ar}_"+dates[0]+"_"+dates_ar[-1]+".xlsx") #save current query to old_queries
@@ -440,7 +442,7 @@ df_to_export.to_excel(str(directory)+f"/old_queries/{data_pointer}_{data_pointer
 # # Plot with sorted stacked bars
 # * make innner outter index data frame, sort by inner index (causes)
 
-# In[49]:
+# In[31]:
 
 
 """times=[]
@@ -451,33 +453,33 @@ times_causes_array=[times,causes*len(dates)]
 times_causes_array"""
 
 
-# In[50]:
+# In[32]:
 
 
 """data=np.array(list(weight_count_causes.values())).T.flatten()
 data.shape"""
 
 
-# In[51]:
+# In[33]:
 
 
 """s=pd.Series(data, index=times_causes_array)"""
 
 
-# In[52]:
+# In[34]:
 
 
 """s1=s.groupby(level=[0]).apply(lambda x:x.groupby(level=[1]).sum().sort_values(ascending=True))
 s1"""
 
 
-# In[53]:
+# In[35]:
 
 
 """s1.unstack().plot.bar(stacked=True)"""
 
 
-# In[54]:
+# In[36]:
 
 
 """data,idxs=weight_count_causes.values(),weight_count_causes.keys()
@@ -488,7 +490,7 @@ data.plot.bar()"""
 
 # # Export notebook to make .py script
 
-# In[ ]:
+# In[37]:
 
 
 get_ipython().system('jupyter nbconvert --to script bar_plot_rejected_per_cause_per_day_aperturas_nariz_per_day.ipynb')

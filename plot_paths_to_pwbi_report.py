@@ -116,7 +116,7 @@ path_export=Path.joinpath(path,"path_structure_of_plots.xlsx")
 df_images.to_excel(path_export)
 
 
-# In[ ]:
+# In[11]:
 
 
 get_ipython().system('jupyter nbconvert --to script plot_paths_to_pwbi_report.ipynb')
