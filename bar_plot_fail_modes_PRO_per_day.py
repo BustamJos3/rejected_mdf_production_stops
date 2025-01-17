@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[49]:
+# In[1]:
 
 
 import pandas as pd #modules
@@ -15,16 +15,77 @@ from pathlib import Path
 from datetime import datetime
 
 
-# In[50]:
+# In[2]:
 
 
-directory = Path(r"C:\Users\JDBUSTAMANTE\OneDrive - Duratex SA\reports_visualizacion_data_produccion\source_return_data\data_plots") #get current work directory
+import os
+
+def find_reports_in_onedrive():
+    """
+    Scans the subfolders under the current user's OneDrive folder (including variations like 'OneDrive - Company Name')
+    and returns the paths of all folders with the prefix 'reports'.
+
+    Returns:
+        list: A list of full paths to folders starting with 'reports', or an empty list if none are found.
+    """
+    # Get the base path to the user's home directory
+    user_home = os.path.expanduser("~")
+
+    # Find the OneDrive folder (handles variations like "OneDrive - Company Name")
+    onedrive_folder = None
+    for folder in os.listdir(user_home):
+        if folder.startswith("OneDrive -"):
+            onedrive_folder = os.path.join(user_home, folder)
+            break
+
+    if not onedrive_folder:
+        raise FileNotFoundError("OneDrive folder not found for the current user.")
+
+    # Search for folders with the prefix 'reports' in the OneDrive directory
+    report_folders = []
+    for root, dirs, files in os.walk(onedrive_folder):
+        for dir_name in dirs:
+            if dir_name.lower().startswith("reports"):
+                report_folders.append(os.path.join(root, dir_name))
+
+    return report_folders
+
+
+# In[3]:
+
+
+reports_paths=find_reports_in_onedrive()
+reports_paths
+
+
+# In[4]:
+
+
+str_folder_searcher="reports_visualizacion_data_produccion"
+for report_path in reports_paths:
+    if str_folder_searcher in report_path:
+        path=Path(reports_paths[reports_paths.index(report_path)])
+path=Path.joinpath(path,r"source_and_return_data")
+path
+
+
+# In[5]:
+
+
+os.chdir(path) #change working directory to respective reports folder
+os.getcwd()
+
+
+# In[6]:
+
+
+directory = Path.joinpath(path,"data_plots") #get current work directory
 directory.mkdir(exist_ok=True)
 matching_files = list(directory.glob("*obj*.xlsx"))  # Busca archivos que contengan 'obj' y tengan extensión .xlsx
 print("Archivos encontrados:", matching_files)
 
 
-# In[51]:
+# In[7]:
 
 
 dict_data_pointer={} #dict to store files as dfs
@@ -43,20 +104,20 @@ for i in matching_files: # Read the Excel file
 print(list(dict_data_pointer.keys())) #see keys on dictionary to check callability
 
 
-# In[52]:
+# In[8]:
 
 
 df_root=dict_data_pointer['aperturas_nariz']
 df_root[df_root["Fecha Paro"]=="NaT"]
 
 
-# In[53]:
+# In[9]:
 
 
 df_root
 
 
-# In[57]:
+# In[10]:
 
 
 df_pro=df_root[df_root["Tipo Paro"].str.contains("PRO")]
@@ -67,14 +128,14 @@ df_pro['Fecha Paro'][0]
 
 # # Drop duplicate apertures
 
-# In[59]:
+# In[11]:
 
 
 dates_ar=[date for date in df_pro["Fecha Paro"].unique()]
 dates_ar
 
 
-# In[60]:
+# In[12]:
 
 
 list_dropped_idx_rows=[]
@@ -95,49 +156,49 @@ df_pro.drop(list_dropped_idx_rows,inplace=True) #drop selected rows for current 
 df_pro
 
 
-# In[61]:
+# In[13]:
 
 
 df_count_fail_mode_equipment=df_pro.groupby(by=["Fecha Paro","Modo de Fallo","Descripción Equipo"]).count().loc[:,"Linea"]
 df_count_fail_mode_equipment
 
 
-# In[62]:
+# In[14]:
 
 
 multi_index_from_df=list(df_count_fail_mode_equipment.index)
 multi_index_from_df
 
 
-# In[63]:
+# In[15]:
 
 
 dates=sorted(list(set([multi_index[0] for multi_index in multi_index_from_df ])))
 dates
 
 
-# In[64]:
+# In[16]:
 
 
 fail_modes=sorted(list(set([multi_index[1] for multi_index in multi_index_from_df ])))
 fail_modes
 
 
-# In[65]:
+# In[17]:
 
 
 equipments=sorted(list(set([multi_index[2] for multi_index in multi_index_from_df ])))
 equipments
 
 
-# In[66]:
+# In[18]:
 
 
 df_stacked_data=pd.DataFrame(data=[],index=dates,columns=fail_modes).fillna(0)
 df_stacked_data
 
 
-# In[67]:
+# In[19]:
 
 
 dict_stacked_values={fail_mode:[""]*len(dates) for fail_mode in fail_modes}
@@ -152,13 +213,13 @@ for date,fail_mode,equip in multi_index_from_df:
     dict_stacked_values[fail_mode][idx_date]=value_label_plus_equip
 
 
-# In[68]:
+# In[20]:
 
 
 df_stacked_data
 
 
-# In[69]:
+# In[21]:
 
 
 list_count_by_fail_mode_per_date=list(df_stacked_data.T.values)
@@ -166,7 +227,7 @@ weight_counts={" ".join(fail_mode.split("-")[0].split()).lower():list_count_by_f
 weight_counts
 
 
-# In[70]:
+# In[22]:
 
 
 for new_key,old_key in zip(weight_counts.keys(),fail_modes):
@@ -176,14 +237,14 @@ dict_stacked_values
 
 # # Plot
 
-# In[71]:
+# In[23]:
 
 
 colors_available=mcolors.TABLEAU_COLORS
 colors_available
 
 
-# In[72]:
+# In[24]:
 
 
 """
@@ -192,7 +253,7 @@ colors_choosen
 """
 
 
-# In[74]:
+# In[25]:
 
 
 fig, ax = plt.subplots()
@@ -240,12 +301,4 @@ directory_to_save = Path(str(directory)+imgs_folder+imgs_type_folder+imgs_year_f
 directory_to_save.mkdir(exist_ok=True)
 plt.savefig(str(directory_to_save)+img_name+dates[0]+"_"+dates[-1]+"_"+str_today+".png", bbox_inches='tight') #store img plot
 plt.show()
-
-
-# # Export notebook to make .py script
-
-# In[ ]:
-
-
-get_ipython().system('jupyter nbconvert --to script bar_plot_fail_modes_PRO_per_day.ipynb')
 

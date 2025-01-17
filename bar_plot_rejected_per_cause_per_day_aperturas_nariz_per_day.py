@@ -65,11 +65,83 @@ str_folder_searcher="reports_visualizacion_data_produccion"
 for report_path in reports_paths:
     if str_folder_searcher in report_path:
         path=Path(reports_paths[reports_paths.index(report_path)])
-path=Path.joinpath(path,r"source_and_return_data")
+path=Path.joinpath(path,"source_and_return_data")
 path
 
 
+# # parquet_conversor_excel_file_cleaner
+
 # In[5]:
+
+
+import os
+import pandas as pd
+
+def convert_excels_to_parquet(folder_path):
+    """
+    Converts all Excel files in a folder to Parquet format, removes the original Excel files,
+    and skips the most recent Excel file.
+
+    Args:
+        folder_path (str): Path to the folder containing Excel files.
+    """
+    # Ensure the folder exists
+    if not os.path.exists(folder_path):
+        raise FileNotFoundError(f"The folder {folder_path} does not exist.")
+
+    # List all Excel files in the folder
+    excel_files = [f for f in os.listdir(folder_path) if f.endswith(('.xlsx', '.xls'))]
+
+    if not excel_files:
+        print("No Excel files found in the folder.")
+        return
+
+    # Find the most recent Excel file
+    full_paths = [os.path.join(folder_path, f) for f in excel_files]
+    most_recent_file = max(full_paths, key=os.path.getmtime)
+    most_recent_file_name = os.path.basename(most_recent_file)
+    print(f"Skipping the most recent file: {most_recent_file_name}")
+
+    for excel_file in excel_files:
+        if excel_file == most_recent_file_name:
+            continue  # Skip the most recent file
+
+        try:
+            # Full path to the Excel file
+            excel_path = os.path.join(folder_path, excel_file)
+
+            # Read the Excel file into a DataFrame
+            df = pd.read_excel(excel_path)
+            # Convert all data to strings
+            df = df.astype(str)
+
+            # Generate the Parquet file path
+            parquet_file = os.path.splitext(excel_file)[0] + ".parquet"
+            parquet_path = os.path.join(folder_path, parquet_file)
+
+            # Write the DataFrame to a Parquet file
+            df.to_parquet(parquet_path, index=False)
+            print(f"Converted: {excel_file} -> {parquet_file}")
+
+            # Remove the original Excel file
+            os.remove(excel_path)
+            print(f"Removed: {excel_file}")
+
+        except Exception as e:
+            print(f"Error processing {excel_file}: {e}")
+
+
+# In[6]:
+
+
+# Example usage
+parquet_convertion_folder = Path.joinpath(path,r"data_plots\old_queries")  # Replace with your folder path
+convert_excels_to_parquet(parquet_convertion_folder)
+
+
+# # Work as usual
+
+# In[7]:
 
 
 directory = Path.joinpath(path,"data_plots") #get current work directory
@@ -78,7 +150,7 @@ matching_files = list(directory.glob("*obj*.xlsx"))  # Busca archivos que conten
 print("Archivos encontrados:", matching_files)
 
 
-# In[6]:
+# In[8]:
 
 
 dict_data_pointer={} #dict to store files as dfs
@@ -97,7 +169,7 @@ for i in matching_files: # Read the Excel file
 print(list(dict_data_pointer.keys())) #see keys on dictionary to check callability
 
 
-# In[7]:
+# In[9]:
 
 
 data_pointer_ar="aperturas_nariz" #select df of aperturas de nariz
@@ -107,7 +179,7 @@ df_ar[dates_col_name_ar] =df_ar.loc[:,dates_col_name_ar].apply(lambda x:x.strfti
 df_ar.loc[:,dates_col_name_ar]
 
 
-# In[8]:
+# In[10]:
 
 
 dates_ar=sorted(list(set([ date_str for date_str in df_ar.loc[ :, dates_col_name_ar] ]))) #get dates as str unique of current df
@@ -117,7 +189,7 @@ dates_ar
 # # Check matches on initial hour & final hour
 # * remove apertures that are duplicate for changes on dat shift
 
-# In[9]:
+# In[11]:
 
 
 list_dropped_idx_rows=[]
@@ -138,7 +210,7 @@ df_ar.drop(list_dropped_idx_rows,inplace=True) #drop selected rows for current d
 df_ar
 
 
-# In[10]:
+# In[12]:
 
 
 amt_apertura_nariz=df_ar.groupby(dates_col_name_ar).count().T.iloc[0] #for each production stop there is an apertura de nariz and take those values
@@ -146,7 +218,7 @@ amt_apertura_nariz=np.array(amt_apertura_nariz) #agsin amt of aperturas per day 
 amt_apertura_nariz
 
 
-# In[11]:
+# In[13]:
 
 
 data_pointer="causa_rechazos" #start with df with rejected panels number per day and cause
@@ -162,7 +234,7 @@ df.loc[:,[cause_col_name]]
 # * Drop date col on causa rechazos and replace w/ str date col
 # * Convert str to datetime to make call correctly
 
-# In[12]:
+# In[14]:
 
 
 try: #attemp to drop cummulative total row
@@ -174,13 +246,13 @@ df[dates_col_name]=df.loc[:,dates_col_name].apply(lambda x:x.strftime("%Y-%m-%d"
 df.loc[:,dates_col_name]
 
 
-# In[13]:
+# In[15]:
 
 
 ignored_articles=["de","s","-"] #+#articles to remove for cause name-->make basic cause labelling
 
 
-# In[14]:
+# In[16]:
 
 
 def remove_specific_chars(string=None):
@@ -198,7 +270,7 @@ def remove_specific_chars(string=None):
     return new_cause_basic_name
 
 
-# In[15]:
+# In[17]:
 
 
 causes=[str(i).lower() for i in df[cause_col_name].unique()] #day causes on lower case
@@ -214,7 +286,7 @@ dates,causes
 
 # ### Unique ID color for every cause
 
-# In[16]:
+# In[18]:
 
 
 colors_id_path=Path.joinpath(directory,"valid_causes_rejected_panels.txt")
@@ -226,7 +298,7 @@ causes_colors_df
 # # In case rejected causes is empty:
 # * generate dummy causes, all current valid causes from df of valid causes
 
-# In[17]:
+# In[19]:
 
 
 if len(causes)<1: #causes list is empty
@@ -237,7 +309,7 @@ causes
 # ## Dates check
 # * for now, aperturas de nariz file contains dates that are missing on causa rechazos file
 
-# In[18]:
+# In[20]:
 
 
 while dates_ar!=dates and eval(input()): # [:len(dates)]
@@ -254,7 +326,7 @@ dates==dates_ar
 
 # # Generate data to plotting
 
-# In[19]:
+# In[21]:
 
 
 weight_counts={i:[0]*len(causes) for i in dates} #make dict to store panel per cause per day
@@ -264,7 +336,7 @@ weight_counts
 # # TODO
 # * apply directive to clean classifications and search correctly on causa rechazos
 
-# In[20]:
+# In[22]:
 
 
 name_of_rejected_panels_col="Salidas (inv.)" #actual name of rejected panels col-->start completion of panel per cause per day
@@ -289,7 +361,7 @@ for date in dates: #run through dates
 weight_counts
 
 
-# In[21]:
+# In[23]:
 
 
 construc_data_to_stacked=list(weight_counts.items()) #get keys and values of weight_counts
@@ -300,7 +372,7 @@ weight_count_causes={i:array_rejected_panels_per_cause_per_day[j,:] for i,j in z
 weight_count_causes
 
 
-# In[22]:
+# In[24]:
 
 
 bar_cause_labels=[[]]*len(causes) #make labels to display on rectangle bar data: inside rectangle to do not display 0 values
@@ -313,14 +385,14 @@ bar_cause_labels
 # # TODO
 # * organizar orden de stacked bar para mostrar primero las causas con más paneles rechazados
 
-# In[23]:
+# In[25]:
 
 
 colors_available=mcolors.TABLEAU_COLORS
 colors_available
 
 
-# In[24]:
+# In[26]:
 
 
 colors_available_keys=list(colors_available)
@@ -328,7 +400,7 @@ colors_available_keys=list(colors_available)
 colors_available_keys
 
 
-# In[25]:
+# In[27]:
 
 
 causes_color_idxs=[]
@@ -339,21 +411,21 @@ for j in range(len(causes)):
 causes_color_idxs
 
 
-# In[26]:
+# In[28]:
 
 
 colors_choosen={cause:colors_available_keys[idx_color] for cause,idx_color in zip(causes,causes_color_idxs)}
 colors_choosen
 
 
-# In[27]:
+# In[29]:
 
 
 fontsz=12 #define font size of plot components
 matplotlib.rcParams.update({'font.size': fontsz}) #update font size for plot components of matplotlib
 
 
-# In[38]:
+# In[53]:
 
 
 fig, ax = plt.subplots()
@@ -372,14 +444,7 @@ for (data_label,weight_count),bar_value_stick,color_cause in zip(weight_count_ca
     if check_bottom>max_bottom:
         max_bottom=check_bottom #to generate ylim of causas rechazos
     ax.bar_label(p, labels=bar_value_stick, label_type='center',color="black",padding=0) #add bar height str value on bar center
-leq=ax.legend(loc="best") #generate legend box for bar plot
-# Get the bounding box of the original legend
-bb = leq.get_bbox_to_anchor().transformed(ax.transAxes.inverted()) 
-# Change to location of the legend. 
-xOffset = -1.2
-bb.x0 += xOffset
-bb.x1 += xOffset*(1.05)
-leq.set_bbox_to_anchor(bb, transform = ax.transAxes)
+leq=ax.legend(bbox_to_anchor=(-0.54,0.9),loc="upper left") #generate legend box for bar plot and set its ubication
 amt_xticks=range(len(dates))
 ax.set_xticks(amt_xticks)
 ax.set_xticklabels(dates,rotation=90) #rotate x axis labels 90º to be displayed vertically
@@ -400,15 +465,8 @@ ax_ar.set_xlabel(dates_col_name_ar) #name of bar plot x axis
 ax_ar.plot(amt_apertura_nariz,label="Aperturas de nariz",linewidth=fontsz/5,linestyle='dashed',color="b",marker=".",
         markersize=fontsz/2,markerfacecolor='red') #plot aperturas de nariz by day
 ax_ar.set_xticklabels(dates_ar,rotation=90)
-leq_ar=ax_ar.legend(loc="upper right") #move legend box of aperturas to left to not cover bar plot legend box #bbox_to_anchor=(0.7, 1),
-# Get the bounding box of the original legend
-bb_ar = leq_ar.get_bbox_to_anchor().transformed(ax.transAxes.inverted()) 
-# Change to location of the legend. 
-xOffset = 0.6
-bb_ar.x0 += xOffset
-bb_ar.x1 += xOffset*(1.05)
-leq_ar.set_bbox_to_anchor(bb_ar, transform = ax.transAxes)
-secax_y2 = ax_ar.secondary_yaxis("right", functions=(lambda x: x, lambda x: x)) #make new y axis for aperturas
+leq_ar=ax_ar.legend(bbox_to_anchor=(-0.54,1),loc="upper left") #generate legend box for line plot and set its ubications sligthy over cause legend
+secax_y2 = ax_ar.secondary_yaxis("right", functions=(lambda x: x, lambda x: x)) #make new y axis for aperturas, same lambda to avoid complexity in instrucctions
 secax_y2.set_ylabel("Aperturas de nairz [-]",color='b') #change color of y axis to blue
 max_apertures_axis=np.max(amt_apertura_nariz) #to set max lim of aperturas y axis
 max_apertures_axis_step=3
@@ -486,12 +544,4 @@ s1"""
 
 data=pd.DataFrame(index=idxs,data=data,columns=dates).T
 data.plot.bar()"""
-
-
-# # Export notebook to make .py script
-
-# In[37]:
-
-
-get_ipython().system('jupyter nbconvert --to script bar_plot_rejected_per_cause_per_day_aperturas_nariz_per_day.ipynb')
 
