@@ -579,8 +579,8 @@ prs.save(str(directory_to_save)+rf"\Preusos Producción y MMTTO_{presentation_da
 prs.save(Path.joinpath(path,str(directory)+r'\test\test.pptx'))
 
 
-# In[26]:
+# In[1]:
 
 
-get_ipython().system('jupyter nbconvert --to script filled_forms_no_cumple.ipynb')
+get_ipython().system('jupyter nbconvert filled_forms_no_cumple.ipynb --to script')
 
