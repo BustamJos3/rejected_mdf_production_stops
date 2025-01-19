@@ -1,3 +1,1 @@
-jupyter nbconvert bar_plot_rejected_per_cause_per_day_aperturas_nariz_per_day.ipynb --to script
-jupyter nbconvert bar_plot_fail_modes_PRO_per_day.ipynb --to script
-jupyter nbconvert plot_paths_to_pwbi_report.ipynb --to script
+jupyter nbconvert quality_metrics_per_day.ipynb --to script
