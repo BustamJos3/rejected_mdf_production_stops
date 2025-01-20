@@ -3,7 +3,7 @@
 
 # In[127]:
 
-
+"""
 import os
 from datetime import datetime
 
@@ -101,3 +101,4 @@ with smtplib.SMTP_SSL("smtp-mail.outlook.com", 587) as server: #, context=contex
     server.login(sender_email, password)
     server.sendmail(sender_email, receiver_email, text)
 
+"""
