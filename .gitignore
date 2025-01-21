@@ -1,3 +1,4 @@
 **/.ipynb_checkpoints/
-requirements.in
+**/__pycache__/
 *.pbix
+requirements.in
