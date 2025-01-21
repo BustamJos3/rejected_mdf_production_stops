@@ -3,7 +3,7 @@
 
 # In[89]:
 
-"""
+
 import pandas as pd
 import numpy as np
 import os
@@ -70,4 +70,4 @@ plt.xticks(ticks=range(len(counts.columns)), labels=list(df.columns) + ['acumula
 plt.tight_layout()  # Adjust layout to fit labels
 plt.savefig("completions_2024_pre-usos.png")
 plt.show()
-"""
+

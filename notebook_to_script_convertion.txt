@@ -4,5 +4,4 @@ jupyter nbconvert pre_uso_completions_observations\report_completions_respect_no
 jupyter nbconvert quality_measures_deviations\quality_metrics_per_day.ipynb --to script
 jupyter nbconvert rejected_mdf_panels_nose_apertures\bar_plot_fail_modes_PRO_per_day.ipynb --to script
 jupyter nbconvert rejected_mdf_panels_nose_apertures\bar_plot_rejected_per_cause_per_day_aperturas_nariz_per_day.ipynb --to script
-jupyter nbconvert rejected_mdf_panels_nose_apertures\email_sender_bar_plots.ipynb --to script
 jupyter nbconvert rejected_mdf_panels_nose_apertures\plot_paths_to_pwbi_report.ipynb --to script

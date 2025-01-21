@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[15]:
+# In[1]:
 
 
 import pandas as pd #modules
@@ -15,11 +15,13 @@ from pathlib import Path
 from datetime import datetime, timedelta
 import itertools
 import string
+from pptx import Presentation
+from pptx.util import Inches, Pt
 
 
 # # Load shift hours
 
-# In[16]:
+# In[14]:
 
 
 def find_files_by_format(root_folder, file_format):
@@ -46,7 +48,7 @@ def find_files_by_format(root_folder, file_format):
     return matching_files
 
 
-# In[17]:
+# In[15]:
 
 
 def operate_mercyful_times(hour,operand): #function to apply modifications on shift hours
@@ -67,7 +69,7 @@ def operate_mercyful_times(hour,operand): #function to apply modifications on sh
         return eval("datetime.strptime(hour, '%H:%M:%S').time()")
 
 
-# In[18]:
+# In[16]:
 
 
 str___splitter=lambda x: x.split("_")
@@ -75,7 +77,7 @@ str___splitter=lambda x: x.split("_")
 
 # # Function to find cloud (OneDrive) folder
 
-# In[19]:
+# In[17]:
 
 
 import os
@@ -111,14 +113,14 @@ def find_reports_in_onedrive():
     return report_folders
 
 
-# In[20]:
+# In[18]:
 
 
 reports_paths=find_reports_in_onedrive()
 reports_paths
 
 
-# In[21]:
+# In[19]:
 
 
 str_folder_searcher="reports_pre-usos_diligenciamiento_no_cumple"
@@ -129,14 +131,14 @@ path=Path.joinpath(path,r"source_and_return_data")
 path
 
 
-# In[22]:
+# In[20]:
 
 
 os.chdir(path) #change working directory to respective reports folder
 os.getcwd()
 
 
-# In[23]:
+# In[21]:
 
 
 shifts_hours=pd.read_csv(r".\shifts_hours.txt",delimiter=",")
@@ -149,7 +151,7 @@ shifts_hours
 
 # # Generation of querie to filter dates to look up completion dates
 
-# In[24]:
+# In[22]:
 
 
 def get_monday_of_week():
@@ -178,7 +180,7 @@ def get_monday_of_week():
     return monday.date()
 
 
-# In[25]:
+# In[23]:
 
 
 def date_limits(moment_of_week=True,day_separation=1):
@@ -202,7 +204,7 @@ def date_limits(moment_of_week=True,day_separation=1):
 # ## Construct separation of days from last execution date to day to search in pre-usos
 # * store last execution date to compute separation of days
 
-# In[14]:
+# In[24]:
 
 
 today=datetime.now() #get date_time from today
@@ -226,10 +228,10 @@ else:
 # Write the date_time variable into the file
 list_current_reports=find_files_by_format(Path.joinpath(path,"pptx_reports"),".pptx")
 yesterday=today_date-timedelta(days=1)
-most_recent_report_title_yesterday=False #flag to check yesterday report existance
+most_recent_report_title_not_yesterday=True #flag to check yesterday report existance
 for report_title in list_current_reports:
     if yesterday.strftime('%Y-%m-%d') in report_title:
-        most_recent_report_title_yesterday=True
+        most_recent_report_title_not_yesterday=False
 if most_recent_report_title_not_yesterday: #if a report with yesterday date is not already generated, update last execution
     with open(file_name, 'w') as file:
         print("no matches in reports, proceed to update last execution")
@@ -242,7 +244,7 @@ day_to_stop_search_querie,day_before_yesterday_querie
 
 # # Load pre-usos files
 
-# In[13]:
+# In[25]:
 
 
 directory = Path(r".\pre_usos_actual") #get current work directory
@@ -250,7 +252,7 @@ matching_files = list(directory.glob("*Pre-Uso*.xlsx"))  # Busca archivos que te
 print("Archivos encontrados:", matching_files)
 
 
-# In[14]:
+# In[26]:
 
 
 dict_data_pointer={} #dict to store files as dfs
@@ -270,7 +272,7 @@ print(list(dict_data_pointer.keys())) #see keys on dictionary to check callabili
 
 # # Make df to create excel with table of completions and specific rules of laboral days
 
-# In[15]:
+# In[27]:
 
 
 day_difference=day_to_stop_search_querie-day_before_yesterday_querie
@@ -280,7 +282,7 @@ day_difference
 
 # ## change creation of row_report with the reading from loading the actual workbook with the dates
 
-# In[16]:
+# In[28]:
 
 
 df_pre_uso_completion_report=pd.read_excel(Path.joinpath(path,r"pre_uso_produccion_report_copia\Preusos Producción.xlsx"))
@@ -302,7 +304,7 @@ df_check_completion
 
 # ## Function to check shifts
 
-# In[17]:
+# In[29]:
 
 
 def shift_checker(date_time=None,system_to_test=None):
@@ -335,7 +337,7 @@ def shift_checker(date_time=None,system_to_test=None):
 
 # ## Apply check of shifts on dfs pre-usos
 
-# In[18]:
+# In[30]:
 
 
 dict_result_shift_checker={}
@@ -363,7 +365,7 @@ dict_result_shift_checker
 
 # ## asign values on df of completion
 
-# In[19]:
+# In[31]:
 
 
 df_check_completion_cols=df_check_completion.columns
@@ -385,7 +387,7 @@ df_check_completion
 
 # ## export completion df to excel
 
-# In[20]:
+# In[32]:
 
 
 path_to_export=Path.joinpath(path,rf'row_date_report\{day_to_stop_search_querie.date()}.xlsx')
@@ -395,7 +397,7 @@ df_check_completion.to_excel(path_to_export)
 
 # # Filter dfs of preusos on one cell to get "No Cumple"
 
-# In[21]:
+# In[33]:
 
 
 dict_data_no_cumple={}
@@ -439,14 +441,7 @@ for pre_uso_key in list(dict_data_pointer.keys()):
 # * If size of observations is adequate, put no completion entries, questions label and observations in the same slide
 # * Table must fit on one slide without exceding the size of the slide
 
-# In[22]:
-
-
-from pptx import Presentation
-from pptx.util import Inches, Pt
-
-
-# In[23]:
+# In[35]:
 
 
 def iter_cells(table):
@@ -458,7 +453,7 @@ def iter_cells(table):
             yield cell
 
 
-# In[24]:
+# In[38]:
 
 
 prs = Presentation()
@@ -545,7 +540,7 @@ for pre_uso_name in dict_data_no_cumple.keys(): #take each df with no cumple ent
     for idx_col in range(table_cols):
     #put date of observation and observation content
         observation=df.at[ list(df.index)[0],df_index_col[idx_col] ]
-        min_lenght_observation=40 #min lenght of observation to be inserted on slides report
+        min_lenght_observation=1 #min lenght of observation to be inserted on slides report
         if len(observation)<min_lenght_observation: #if observation lenght is minor to 28 chars, continue
             continue
         else:

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[5]:
+# In[1]:
 
 
 import os
@@ -9,7 +9,7 @@ from pathlib import Path
 import pandas as pd
 
 
-# In[6]:
+# In[2]:
 
 
 def get_png_images_with_structure(root_folder):
@@ -52,7 +52,7 @@ def get_png_images_with_structure(root_folder):
     return df
 
 
-# In[7]:
+# In[3]:
 
 
 import os
@@ -88,14 +88,14 @@ def find_reports_in_onedrive():
     return report_folders
 
 
-# In[2]:
+# In[4]:
 
 
 reports_paths=find_reports_in_onedrive()
 reports_paths
 
 
-# In[8]:
+# In[5]:
 
 
 str_folder_searcher="reports_visualizacion_data_produccion"
@@ -106,7 +106,7 @@ path=Path.joinpath(path,r"source_and_return_data")
 path
 
 
-# In[10]:
+# In[6]:
 
 
 # export df as excel data

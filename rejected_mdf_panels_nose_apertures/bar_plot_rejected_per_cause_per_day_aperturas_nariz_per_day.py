@@ -425,7 +425,7 @@ fontsz=12 #define font size of plot components
 matplotlib.rcParams.update({'font.size': fontsz}) #update font size for plot components of matplotlib
 
 
-# In[53]:
+# In[30]:
 
 
 fig, ax = plt.subplots()
@@ -451,7 +451,7 @@ ax.set_xticklabels(dates,rotation=90) #rotate x axis labels 90º to be displayed
 ax.set_xlabel(dates_col_name) #name of bar plot x axis
 rejected_panels_values=np.array(list(weight_counts.values()))
 max_rejected_axis=np.max(rejected_panels_values) #get max of all data
-max_rejected_axis_step=3
+max_rejected_axis_step=4
 ax.set_yticks(np.arange(0, max_rejected_axis+max_bottom, max_rejected_axis_step)) #set y axis label values: axis pitch=10 unds
 ax.set_ylabel("Cantidad de rechazos [-]") #y axis name for bar plot
 ax.set_aspect('auto')
@@ -469,7 +469,7 @@ leq_ar=ax_ar.legend(bbox_to_anchor=(-0.54,1),loc="upper left") #generate legend 
 secax_y2 = ax_ar.secondary_yaxis("right", functions=(lambda x: x, lambda x: x)) #make new y axis for aperturas, same lambda to avoid complexity in instrucctions
 secax_y2.set_ylabel("Aperturas de nairz [-]",color='b') #change color of y axis to blue
 max_apertures_axis=np.max(amt_apertura_nariz) #to set max lim of aperturas y axis
-max_apertures_axis_step=3
+max_apertures_axis_step=4
 secax_y2.set_yticks(np.arange(0, max_apertures_axis*(1.4), max_apertures_axis_step)) #change y axis limits and pitch to 5
 ax_ar.set_aspect('auto')
 imgs_folder="/imgs_reports_daily" #str with name to save plots
@@ -485,13 +485,13 @@ plt.savefig(str(directory_to_save)+img_name+dates[0]+"_"+dates_ar[-1]+"_"+str_to
 plt.show()
 
 
-# In[29]:
+# In[31]:
 
 
 df_to_export=pd.concat([df, df_ar], axis=1) #merge dfs to store data as old queries
 
 
-# In[30]:
+# In[32]:
 
 
 df_to_export.to_excel(str(directory)+f"/old_queries/{data_pointer}_{data_pointer_ar}_"+dates[0]+"_"+dates_ar[-1]+".xlsx") #save current query to old_queries
@@ -500,7 +500,7 @@ df_to_export.to_excel(str(directory)+f"/old_queries/{data_pointer}_{data_pointer
 # # Plot with sorted stacked bars
 # * make innner outter index data frame, sort by inner index (causes)
 
-# In[31]:
+# In[33]:
 
 
 """times=[]
@@ -511,33 +511,33 @@ times_causes_array=[times,causes*len(dates)]
 times_causes_array"""
 
 
-# In[32]:
+# In[34]:
 
 
 """data=np.array(list(weight_count_causes.values())).T.flatten()
 data.shape"""
 
 
-# In[33]:
+# In[35]:
 
 
 """s=pd.Series(data, index=times_causes_array)"""
 
 
-# In[34]:
+# In[36]:
 
 
 """s1=s.groupby(level=[0]).apply(lambda x:x.groupby(level=[1]).sum().sort_values(ascending=True))
 s1"""
 
 
-# In[35]:
+# In[37]:
 
 
 """s1.unstack().plot.bar(stacked=True)"""
 
 
-# In[36]:
+# In[38]:
 
 
 """data,idxs=weight_count_causes.values(),weight_count_causes.keys()

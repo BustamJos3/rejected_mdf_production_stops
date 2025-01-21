@@ -287,7 +287,7 @@ ax.set_xticklabels(dates,rotation=90) #rotate x axis labels 90º to be displayed
 ax.set_xlabel("Fecha Paro") #name of bar plot x axis
 amt_stops_per_fail_mode=np.array(list(weight_counts.values()))
 max_y_axis=np.max(amt_stops_per_fail_mode) #get max of all data
-ax.set_yticks(np.arange(0, max_y_axis+max_bottom, 2)) #set y axis label values: axis pitch=10 unds
+ax.set_yticks(np.arange(0, max_y_axis*(1.40), 2)) #set y axis label values: axis pitch=10 unds
 ax.set_ylabel("Cantidad de paradas de producción [-]") #y axis name for bar plot
 ax.set_aspect('auto')
 imgs_folder="/imgs_reports_daily" #str with name to save plots
