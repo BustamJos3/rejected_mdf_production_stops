@@ -1,57 +1,41 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[12]:
 
 
 import os
 from pathlib import Path
 import json
 from jupyter_core.paths import jupyter_runtime_dir
+from base_fns import get_local_folder
+import ast
 
 
-# In[2]:
+# In[13]:
 
 
 class repo_organizer:
     def __init__(self):
         self.notebook_path=self._get_notebook_path()
+        self.current_workdir=self._set_working_directory()
+        self.python_scripts=self._file_format_searcher(format_str="*.py")
         
     def _get_notebook_path(self):
         """
         Get the absolute path of the currently running Jupyter Notebook by finding the active kernel.
-        
+    
         Returns:
             str: The absolute path of the notebook or an error message.
         """
         try:
-            # Locate Jupyter's runtime directory
-            runtime_dir = Path(jupyter_runtime_dir())
-            kernel_files = list(runtime_dir.glob("kernel-*.json"))
-        
-            if not kernel_files:
-                raise FileNotFoundError(f"No kernel connection files found in {runtime_dir}.")
-        
-            # Get the current kernel ID from the environment variable
-            kernel_id = os.path.basename(os.getenv("JPY_PARENT_PID", ""))
-        
-            # Match the active kernel file
-            kernel_file = next((kf for kf in kernel_files if kernel_id in kf.stem), None)
-            if not kernel_file:
-                raise FileNotFoundError(f"No matching kernel file found for ID {kernel_id}.")
-        
-            # Read the kernel file
-            with open(kernel_file, "r") as file:
-                kernel_data = json.load(file)
-        
-            # Retrieve the notebook path if available
-            notebook_path = kernel_data.get("notebook_path", "Notebook path not found in kernel file")
-            return str(Path(notebook_path).resolve())
-        
+            rt_fldr = get_local_folder()
+            return rt_fldr
+    
         except Exception as e:
             return str(e)
             
-    def _set_working_directory(self,path):
+    def _set_working_directory(self):
         """
         Set the working directory to the specified path.
 
@@ -62,7 +46,7 @@ class repo_organizer:
             str: The updated working directory path or an error message.
         """
         try:
-            os.chdir(path)
+            os.chdir(self.notebook_path)
             return os.getcwd()
         except Exception as e:
             return str(e)
@@ -107,6 +91,13 @@ class repo_organizer:
         except Exception as e:
             print(f"An error occurred: {e}")
 
+    def _file_format_searcher(self,format_str="*.none"):
+        """
+        Search for all files in the current working dir and generate an iterable with their paths
+        """
+        cwd = Path(os.getcwd())
+        return cwd.rglob(format_str)
+
     def _execute_matching_scripts(self):
         """
         Execute all Python scripts in the subfolders of the current working directory if their names match
@@ -121,8 +112,8 @@ class repo_organizer:
             cwd = Path(os.getcwd())
 
             # Find all Jupyter notebooks and Python scripts in the subfolders
-            notebooks = {notebook.stem for notebook in cwd.rglob("*.ipynb")}
-            scripts = {script for script in cwd.rglob("*.py")}
+            notebooks = {notebook.stem for notebook in self._file_format_searcher("*.ipynb")}
+            scripts = {script for script in self.python_scripts}
 
             # Match Python scripts with Jupyter notebook names
             matching_scripts = [script for script in scripts if script.stem in notebooks]
@@ -148,6 +139,7 @@ class repo_organizer:
 
         except Exception as e:
             print(f"An error occurred: {e}")
+            
     def _export_requirements(self):
         """
         Generate a requirements.txt file for the Python scripts in the current repo folder,
@@ -190,21 +182,81 @@ class repo_organizer:
         except Exception as e:
             print(f"An error occurred: {e}")
 
+    def _extract_functions_to_module(self, input_file, output_module):
+        """
+        Extract all function definitions from a Python file and save them to a new module,
+        avoiding duplicate functions already present in the module.
 
-# In[3]:
+        Args:
+            input_file (str): Path to the input Python file.
+            output_module (str): Path to the output module file.
+
+        Returns:
+            None
+        """
+        try:
+            import ast
+            from pathlib import Path
+
+            # Read the input file
+            with open(input_file, "r") as f:
+                source_code = f.read()
+
+            # Parse the source code into an AST
+            tree = ast.parse(source_code)
+
+            # Extract function definitions
+            functions = [
+                node for node in tree.body if isinstance(node, ast.FunctionDef)
+            ]
+
+            if not functions:
+                print("No functions found in the input file.")
+                return
+
+            # Check existing functions in the output module
+            existing_functions = set()
+            if Path(output_module).exists():
+                with open(output_module, "r") as f:
+                    existing_code = f.read()
+                existing_tree = ast.parse(existing_code)
+                existing_functions = {
+                    node.name for node in existing_tree.body if isinstance(node, ast.FunctionDef)
+                }
+
+            # Generate source code for new functions
+            new_functions = [
+                func for func in functions if func.name not in existing_functions
+            ]
+
+            if not new_functions:
+                print("No new functions to add.")
+                return
+
+            extracted_code = "\n\n".join(
+                ast.unparse(func) for func in new_functions
+            )
+
+            # Append the new functions to the output module
+            with open(output_module, "a") as f:
+                f.write("\n\n# Extracted Functions\n")
+                f.write(extracted_code)
+
+            print(f"Extracted functions saved to {output_module}")
+
+        except Exception as e:
+            print(f"An error occurred: {e}")
+
+
+# In[14]:
 
 
 organizer=repo_organizer()
 
 
-# In[4]:
+# In[16]:
 
 
-organizer.notebook_path
-
-
-# In[5]:
-
-
-organizer._export_requirements()
+for python_script in organizer.python_scripts:
+    organizer._extract_functions_to_module(python_script,r".\reports\reports.py")
 
